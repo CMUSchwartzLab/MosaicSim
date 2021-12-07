@@ -12,7 +12,7 @@ sig_df = sig_df.iloc[1:]
 sig_df = sig_df.iloc[:,1:]
 signatures_matrix = sig_df.to_numpy()
 num_signatures = 78
-use_signatures = True
+use_signatures = False
 signature_alpha = 10
 signature_distributions = [float(1/num_signatures)]*num_signatures
 
