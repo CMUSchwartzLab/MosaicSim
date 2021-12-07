@@ -5,6 +5,9 @@ The simulator requires the following python packages to run: pandas, numpy, biop
 Each of the packages can be easily installed using pip, and running "pip install PACKAGE" for each of the packages above.
 
 Alternatively, one could install these packages in a conda environment
+# Data Dependency
+The simulator requires a ground truth reference genome from which to simulate from. We use the hg38 reference genome, which can be downloaded by first running "wget http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz" and then "gunzip hg38.fa.gz". Be sure the unzipped fasta file is in the MosaicSim/data directory to avoid a runtime error. The user could also swap this genome for another reference genome by simply updating the "full_genome" parameter in the parameters.py file.
+
 # Execution
 The user can adjust the parameters of the simulation in the "parameters.py" file. Be sure to change the base_working_dir to the directory you want to store your data, and change the other parameters as desired. Descriptions of each of the parameters are included as comments in the parameters.py script and in the paper.
 
