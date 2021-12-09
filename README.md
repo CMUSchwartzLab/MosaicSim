@@ -1,8 +1,9 @@
 # MosaicSim
 # Dependencies
+The user should first download python3 if they do not already have it.
 The simulator requires the following python packages to run: pandas, numpy, biopython, tskit, msprime, glob
 
-Each of the packages can be easily installed using pip, and running "pip install PACKAGE" for each of the packages above.
+Each of the packages can be easily instal-led using pip, and running "pip3 install PACKAGE" for each of the packages above.
 
 Alternatively, one could install these packages in a conda environment
 # Data Dependency
