@@ -677,10 +677,6 @@ def applyMutations(tot_nodes, working_dir, list_of_paths, use_signatures, mutati
         for i in range(len(path)-1):
             if(d[path[i+1]] == 'na'):
                 current_genome = []
-                '''
-				with gzip.open(d[path[i]], 'rb') as f: 
-					current_genome = pickle.load(f)
-				'''
                 current_genome = rgz(d[path[i]])
                 c_infos = infos[path[i]].copy()
                 c_muts = muts[path[i]].copy()
@@ -884,6 +880,7 @@ def runPairedSim(num_clones, coverage, rl, fl, read_loc, floc, batch, root, alph
         for i in range(batch):
             distn = getDirichletClone(num_clones, alpha)
             clone = pickdclone(distn, num_clones)
+            print(clone)
             if(flag == 0):
                 ls = rgz(f'{read_loc}{clone}.gz')
             for chrom in ls:
@@ -1107,7 +1104,6 @@ reduced_chrom_dict = ['chr1', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr1
                       'chr18', 'chr19', 'chr2', 'chr20', 'chr21', 'chr22', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9']
 sex_chroms = ['chrX', 'chrY']
 chroms = []
-#full_genome = './data/hg38.fa'
 fasta_sequences = SeqIO.parse(open(full_genome), 'fasta')
 for fasta in fasta_sequences:
     name = fasta.id
@@ -1124,7 +1120,6 @@ print('chroms loaded')
 getmemory()
 
 total_num_intervals = 0
-#EXON_FILE = './data/exonsegments.txt'
 exonDict = {}
 for i in chrom_dict:
     exonDict[i] = []
@@ -1144,7 +1139,6 @@ print(base_working_dir)
 
 # do reference first
 print('making ref reads')
-#reference_working_dir = base_working_dir + 'reference/'
 makedir(reference_working_dir)
 clear_dir(reference_working_dir)
 wgz(reference_working_dir + str(ref_root_node) + '.gz', chroms)
@@ -1185,6 +1179,10 @@ for tum in range(num_tumors):
     tot_nodes = 2*num_clones - 1
     root_node = tot_nodes - 1
     int_nodes = root_node - 1
+    if(use_leaf_only): 
+        use_nodes = num_clones
+    else: 
+        use_nodes = int_nodes
     pop = random.choice(pop_list)
     tumor_number_dir = f'tumor_{tum}/'
     working_dir = base_working_dir + tumor_number_dir
@@ -1239,31 +1237,31 @@ for tum in range(num_tumors):
         getmemory()
         if(paired):
             if(WES):
-                exonrunPairedSim(int_nodes, coverage, read_len, frag_len, working_dir, real_working_dir,
+                exonrunPairedSim(use_nodes, coverage, read_len, frag_len, working_dir, real_working_dir,
                                  1, root_node, exonDict, numchrommap, 10, alpha, error_rate, flag=0)
                 for i in range(num_single_cells):
-                    exonrunPairedSim(int_nodes, coverage, read_len, frag_len, working_dir, real_working_dir,
+                    exonrunPairedSim(use_nodes, coverage, read_len, frag_len, working_dir, real_working_dir,
                                      1, root_node, exonDict, numchrommap, 10, alpha, error_rate, flag=2)
 
             else:
-                runPairedSim(int_nodes, coverage, read_len, frag_len, working_dir,
+                runPairedSim(use_nodes, coverage, read_len, frag_len, working_dir,
                              real_working_dir, batch_size, root_node, alpha, error_rate, flag=0)
                 for i in range(num_single_cells):
-                    runPairedSim(int_nodes, coverage, read_len, frag_len, working_dir,
+                    runPairedSim(use_nodes, coverage, read_len, frag_len, working_dir,
                                  real_working_dir, batch_size, root_node, alpha, error_rate, flag=2)
         else:
             if(WES):
-                exonrunSim(int_nodes, coverage, read_len, working_dir, real_working_dir,
+                exonrunSim(use_nodes, coverage, read_len, working_dir, real_working_dir,
                            1, root_node, exonDict, numchrommap, 10, alpha, error_rate, flag=0)
                 for i in range(num_single_cells):
-                    exonrunSim(int_nodes, coverage, read_len, working_dir, real_working_dir,
+                    exonrunSim(use_nodes, coverage, read_len, working_dir, real_working_dir,
                                1, root_node, exonDict, numchrommap, 10, alpha, error_rate, flag=2)
 
             else:
-                runSim(int_nodes, coverage, read_len, working_dir,
+                runSim(use_nodes, coverage, read_len, working_dir,
                        real_working_dir, batch_size, root_node, alpha, error_rate, flag=0)
                 for i in range(num_single_cells):
-                    runSim(int_nodes, coverage, read_len, working_dir,
+                    runSim(use_nodes, coverage, read_len, working_dir,
                            real_working_dir, batch_size, root_node, alpha, error_rate, flag=2)
 print('finished tumors')
 if(liquid_biopsy):
