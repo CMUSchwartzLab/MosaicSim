@@ -116,7 +116,7 @@ def SNPSig(seqs):
         else:
             pos = -1
     seqs[chrom[0]] = seq
-    return [-1], [pos, chrom[0], target]
+    return [-1], [pos, chrom[0], target, pos+1, numchrommap[target]]
 
 
 def speedSNP(seqs):
@@ -150,7 +150,7 @@ def speedSNP(seqs):
                 char = random.choice(BASES)
             seq = seq[:pos] + char + seq[pos+1:]
     seqs[chrom[0]] = seq
-    return [-1], [pos, chrom[0], target]
+    return [-1], [pos, chrom[0], target, pos+1, numchrommap[target]]
 
 
 def insertionsmall(seqs):
@@ -168,7 +168,7 @@ def insertionsmall(seqs):
         ins_str = ins_str + random.choice(BASES)
     new_seq = seq[:pos] + ins_str + seq[pos:]
     seqs[chrom[0]] = new_seq
-    return [ins_str], [pos, number_of_bases_to_insert, chrom[0], target]
+    return [ins_str], [pos, number_of_bases_to_insert, chrom[0], target, pos+1, numchrommap[target]]
 
 
 def deletionsmall(seqs):
@@ -190,7 +190,7 @@ def deletionsmall(seqs):
     seqs[chrom[0]] = new_seq
     position = int(pos)
     chromosome = int(chrom[0])
-    return [-1], [position, deletion_range, chromosome, target]
+    return [-1], [position, deletion_range, chromosome, target, position+1, numchrommap[target]]
 
 
 def CNV(seqs):
@@ -214,7 +214,7 @@ def CNV(seqs):
     end_string = seq[edidx:]
     full_string = start_string + repeatedsubseq + end_string
     seqs[chrom[0]] = full_string
-    return [-1], [stidx, edidx, rep_num, chrom[0], target]
+    return [-1], [stidx, edidx, rep_num, chrom[0], target, stidx+1, edidx+1, numchrommap[target]]
 
 
 def aneuploidy(seqs):
@@ -227,7 +227,7 @@ def aneuploidy(seqs):
     for i in range(rep_num-1):
         GLOBAL_CHROM_NUM.append(target)
         seqs.append(seq)
-    return [-1], [rep_num, chrom[0], target]
+    return [-1], [rep_num, chrom[0], target, numchrommap[target]]
 
 
 def deletion(seqs):
@@ -251,7 +251,7 @@ def deletion(seqs):
         end_string = seq[edidx:]
         full_string = start_string + end_string
         seqs[chrom[0]] = full_string
-        return [-1], [stidx, edidx, chrom[0], target]
+        return [-1], [stidx, edidx, chrom[0], target, stidx+1, edidx+1, numchrommap[target]]
 
 
 def inversion(seqs):
@@ -284,7 +284,7 @@ def inversion(seqs):
     end_string = seq[edidx:]
     full_string = start_string + reversed_subseq + end_string
     seqs[chrom[0]] = full_string
-    return [-1], [stidx, edidx, chrom[0], target]
+    return [-1], [stidx, edidx, chrom[0], target, stidx+1, edidx+1, numchrommap[target]]
 
 
 def kataegis(seqs):
@@ -320,7 +320,7 @@ def kataegis(seqs):
     full_string = start_string + new_seq + end_string
     # Pick mutational type
     seqs[chrom[0]] = full_string
-    return [-1], [stidx, edidx, type_of_variation, chrom[0], target]
+    return [-1], [stidx, edidx, type_of_variation, chrom[0], target, stidx+1, edidx+1, numchrommap[target]]
 
 
 def translocation(seqs):
@@ -345,7 +345,7 @@ def translocation(seqs):
             string2 = fp2 + second_part
             seqs[chrom[0]] = string1
             seqs[chrom[1]] = string2
-            return [-1], [bkpt1, bkpt2, 1, chrom[0], chrom[1], target1, target2]
+            return [-1], [bkpt1, bkpt2, 1, chrom[0], chrom[1], target1, target2, numchrommap[target1], numchrommap[target2]]
         else:
             first_part = seq1[:bkpt1]
             second_part = seq1[bkpt1:]
@@ -355,7 +355,7 @@ def translocation(seqs):
             string2 = fp2 + sp2 + second_part
             seqs[chrom[0]] = string1
             seqs[chrom[1]] = string2
-            return [-1], [bkpt1, bkpt2, 0, chrom[0], chrom[1], target1, target2]
+            return [-1], [bkpt1, bkpt2, 0, chrom[0], chrom[1], target1, target2, numchrommap[target1], numchrommap[target2]]
     except:
         return [-1], [-1]
 
@@ -418,7 +418,7 @@ def chromothripsis(seqs):
         build_seq += subseq[i]
     seqs[chrom[0]] = first_part + build_seq + last_part
     breakpoints = list(breakpoints)
-    return [-1], [stidx, edidx, splits, chrom[0], target]
+    return [-1], [stidx, edidx, splits, chrom[0], target, stidx+1, edidx+1, numchrommap[target]]
 
 
 def BFB(seqs):
@@ -437,7 +437,7 @@ def BFB(seqs):
             next_portion = first_portion[::-1]
             curr_seq = first_portion + next_portion
         seqs[chrom[0]] = curr_seq
-        return all_bkpt, [n_repeats, chrom[0], target]
+        return all_bkpt, [n_repeats, chrom[0], target, numchrommap[target]]
     except:
         return [-1], [-1]
 

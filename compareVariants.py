@@ -1,55 +1,56 @@
+import os
+import sys
 import ast
 import math
-f = open('/home/assrivat/haoyun_files/atjiiuk/tumor_0/information_list.txt', 'r')
-d = f.readlines()[0]
-
-actual_d = ast.literal_eval(d)
-all_actual_muts = set()
-counter = 0
-for i in actual_d:
-        for k in actual_d[i]:
-		#snv check
-                alternate_tuple = (k[0], int(k[2]/2))
-                counter += 1
-                all_actual_muts.add(tuple(k))
-                all_actual_muts.add(tuple(alternate_tuple))
-#print(all_actual_muts)
-print(len(all_actual_muts))
-f2 = open('/home/assrivat/somatic.snvs.vcf')
-d = f2.readlines()
-print('loaded')
-chrom_dict = {'chr1':0,'chr10':1, 'chr11':2, 'chr12':3, 'chr13':4,'chr14':5, 'chr15':6 ,'chr16':7, 'chr17':8, 'chr18':9, 'chr19':10,'chr2':11, 'chr20':12, 'chr21':13, 'chr22':14, 'chr3':15, 'chr4':16, 'chr5':17, 'chr6':18, 'chr7':19, 'chr8':20,'chr9':21, 'chrX':22, 'chrY':23}
+import gzip
 clist = ['chr1', 'chr10', 'chr11', 'chr12', 'chr13','chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19','chr2', 'chr20', 'chr21', 'chr22', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8','chr9', 'chrX', 'chrY']
-vcf_lines = 0
-match = 0
-mismatch = 0
-hitset = set()
-missset = set()
-for i in d: 
-        z = i.split('\t')
-        #EDIT THIS LINE TO FIT HTE FILE
-        if(len(z) == 11 and z[0] in clist):
-                chrom = chrom_dict[z[0]]
-                pos = int(z[1])-1
-                a_tuple = (pos, chrom)
-                if(a_tuple in all_actual_muts): 
-                        hitset.add(a_tuple)
-                        match += 1
-                else: 
-                        missset.add(a_tuple)
-                        mismatch +=1
-                vcf_lines += 1
-print(vcf_lines)
-print(match)
-print(mismatch)
-#print(hitset)
-#print(missset)
-for i in missset:
-        mindist = 1e8
-        for j in all_actual_muts:
-                if (i[1] == j[1]):
-                        dist = abs(i[0] - j[0])
-                        if(dist < mindist):
-                                mindist = dist
-        #print(mindist)
+def compareVcftoInfo(vcf_file, info_file):
+	f = open(info_file, 'r')
+	d = f.readlines()[0]
+	actual_d = ast.literal_eval(d)
+	all_actual_muts = set()
+	counter = 0
+	for i in actual_d:
+		for k in actual_d[i]:
+			tup = (k[-1], k[-2])
+			all_actual_muts.add(tup)
+	print(all_actual_muts)
+	f2 = gzip.open(vcf_file, 'rt')
+	d2 = f2.readlines()
+	called_muts = set()
+	for i in d2: 
+		z = i.split('\t')
+		if(len(z) == 11 and z[0] in clist):
+			tup = (z[0], int(z[1]))
+			called_muts.add(tup)
+	print(called_muts)
+	intersection_set = called_muts.intersection(all_actual_muts)
+	uncalled_muts = all_actual_muts.difference(called_muts)
+	false_called_muts = called_muts.difference(all_actual_muts)
+	true_positives = len(intersection_set)
+	missed_muts = len(uncalled_muts)
+	false_positives = len(false_called_muts)
+	return true_positives, false_positives, missed_muts
+def getTumorDirectories(data_name): 
+	data_path = '/home/assrivat/simulation_results/{}/'.format(data_name)
+	total_num_tumors = sum([os.path.isdir(data_path+i) for i in os.listdir(data_path)])-1
+	list_of_samples = []
+	for i in range(total_num_tumors): 
+		current_tumor_path = data_path+'tumor_{}/'.format(i)
+		num_samples_i = sum(os.path.isdir(current_tumor_path+j) for j in os.listdir(current_tumor_path))
+		list_of_samples.append(num_samples_i)
+	return list_of_samples
 
+def main():
+	data_name = sys.argv[1]
+	result_file = open('/home/assrivat/simulation_results/results/{}/SNPcallerstats.txt'.format(data_name), 'w')
+	samples = getTumorDirectories(data_name)
+	for i in range(len(samples)): 
+		for j in range(samples[i]):
+			results_dir = '/home/assrivat/simulation_results/results/{}/tumor_{}/samplenum_{}/snv/strelka/results/variants/somatic.snvs.vcf.gz'.format(data_name, i,j)
+			f = '/home/assrivat/simulation_results/{}/tumor_{}/information_list.txt'.format(data_name, i)   
+			tp,fp,mm =compareVcftoInfo(results_dir, f)
+			result_file.write('tumor {}, sample {}, values: {}, {}, {}\n'.format(i,j,tp,fp,mm))
+if __name__ == '__main__':
+	main()
+ 
