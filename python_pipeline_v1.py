@@ -227,6 +227,7 @@ def callSV(normal_bam, tumor_bam, ref, result_dir, caller='delly', threads=4):
         cmd1 = '/home/assrivat/delly_v0.9.1_linux_x86_64bit call -o %s/%s.bcf ' % (result_dir, prefix) + \
             '-g %s.fa ' % ref + \
             '%s %s' % (tumor_bam, normal_bam)
+        print(cmd1)
         # get vcf output
         cmd2 = 'bcftools view %s/%s.bcf > %s/%s.vcf' % (result_dir, prefix, result_dir, prefix)
         os.system(cmd1)
@@ -267,7 +268,7 @@ kjwcrae
 '''
 
 
-def run_align_sort_index(data_name, ref, threads=4, normal=1, tumor_num=0, sample_num=0):
+def run_align_sort_index(data_name, ref, threads=4, normal=1, tumor_num=0, sample_num=0, single_cell_flag = False, single_cell_num = 0):
 
     '''
     go with semi-automatic first -- define which tumor and cell smaple for run
@@ -294,12 +295,17 @@ def run_align_sort_index(data_name, ref, threads=4, normal=1, tumor_num=0, sampl
    
                 
     else:
-        tumor_dir = '%s/tumor_%s/samplenum_%s' % (data_dir, tumor_num, sample_num)
-        tumor_res_dir = '%s/tumor_%s/samplenum_%s' % (result_dir, tumor_num, sample_num)
-        checkpath(tumor_res_dir)
-        
+        info_directory = '{}/tumor_{}/samplenum_{}'.format(data_dir, tumor_num, sample_num)
+        if not single_cell_flag: 
+            tumor_dir = '%s/tumor_%s/samplenum_%s' % (data_dir, tumor_num, sample_num)
+            tumor_res_dir = '%s/tumor_%s/samplenum_%s' % (result_dir, tumor_num, sample_num)
+            checkpath(tumor_res_dir)
+        else: 
+            tumor_dir = '{}/tumor_{}/samplenum_{}_singlecell_{}'.format(data_dir, tumor_num, sample_num, single_cell_num)
+            tumor_res_dir = '{}/tumor_{}/samplenum_{}_singlecell_{}'.format(result_dir, tumor_num, sample_num, single_cell_num)
+            checkpath(tumor_res_dir)
         # 0. define the aligner
-        info_dic = get_info(tumor_dir + '/parameter_list.txt')
+        info_dic = get_info(info_directory + '/parameter_list.txt')
         read_len = int(info_dic['read len'])
         
         if read_len <= 500:
@@ -309,6 +315,7 @@ def run_align_sort_index(data_name, ref, threads=4, normal=1, tumor_num=0, sampl
         
         # 1. define variables
         input_file = glob.glob('%s/*.fasta' % tumor_dir)
+        print(input_file)
         output_file = tumor_res_dir + '/tumorB.sam'
 
     ref = ref
@@ -323,18 +330,24 @@ def run_variant(data_name, ref, tumor_num, sample_num, \
                 sv_caller="None", 
                 wgs=True,
                 BED=None,
-                threads=4):
+                threads=4, single_cell_flag = False, single_cell_num=0):
     '''
     call variants specific caller
     '''
     result_dir = "/home/assrivat/simulation_results/results/%s" % data_name
     # 0. specify the parameters
     normal_bam = '/home/assrivat/simulation_results/results/{}/normal/normal.sorted.bam'.format(data_name)
-    tumor_bam = '%s/tumor_%s/samplenum_%s/tumorB.sorted.bam' % (result_dir, tumor_num, sample_num)
+    if not single_cell_flag:
+        tumor_bam = '%s/tumor_%s/samplenum_%s/tumorB.sorted.bam' % (result_dir, tumor_num, sample_num)
+    else:
+        tumor_bam = '{}/tumor_{}/samplenum_{}_singlecell_{}/tumorB.sorted.bam'.format(result_dir, tumor_num,sample_num, single_cell_num)
     ref = ref
     # 1. call snv
     if snv_caller != 'None':
-        snv_result_dir = '%s/tumor_%s/samplenum_%s/snv' % (result_dir, tumor_num, sample_num)
+        if not single_cell_flag:
+            snv_result_dir = '%s/tumor_%s/samplenum_%s/snv' % (result_dir, tumor_num, sample_num)
+        else: 
+            snv_result_dir = '%s/tumor_%s/samplenum_%s_singlecell_%s/snv' % (result_dir, tumor_num, sample_num,single_cell_num)
         #pdb.set_trace()
         if snv_caller == 'freebayes':
             freebayes_dir = snv_result_dir + '/freebayes'
@@ -350,7 +363,10 @@ def run_variant(data_name, ref, tumor_num, sample_num, \
             exit()
     
     if cnv_caller != 'None':
-        cnv_result_dir = '%s/tumor_%s/samplenum_%s/cnv' % (result_dir, tumor_num, sample_num)
+        if not single_cell_flag:
+            cnv_result_dir = '%s/tumor_%s/samplenum_%s/cnv' % (result_dir, tumor_num, sample_num)
+        else: 
+            cnv_result_dir = '%s/tumor_%s/samplenum_%s_singlecell_%s/cnv' % (result_dir, tumor_num, sample_num,single_cell_num) 
         if cnv_caller == 'cnvkit':
             cnvkit_dir = cnv_result_dir + '/cnvkit'
             checkpath(cnvkit_dir)
@@ -360,7 +376,11 @@ def run_variant(data_name, ref, tumor_num, sample_num, \
             exit()
             
     if sv_caller != 'None':
-        sv_result_dir = '%s/tumor_%s/samplenum_%s/sv' % (result_dir, tumor_num, sample_num)
+        if not single_cell_flag:
+            sv_result_dir = '%s/tumor_%s/samplenum_%s/sv' % (result_dir, tumor_num, sample_num)
+        else: 
+            sv_result_dir = '%s/tumor_%s/samplenum_%s_singlecell_%s/sv' % (result_dir, tumor_num, sample_num,single_cell_num) 
+ 
         if sv_caller == 'delly':
             delly_dir = sv_result_dir + '/delly'
             checkpath(delly_dir)
@@ -374,12 +394,11 @@ def getTumorDirectories(data_name):
     total_num_tumors = sum([os.path.isdir(data_path+i) for i in os.listdir(data_path)])-1
     list_of_samples = []
     for i in range(total_num_tumors): 
-        current_tumor_path = data_path+'tumor_{}/'.format(i)
-        num_samples_i = sum(os.path.isdir(current_tumor_path+j) for j in os.listdir(current_tumor_path))
-        list_of_samples.append(num_samples_i)
+        current_tumor_path = data_path+'tumor_{}/*/'.format(i)
+        subsamples = glob.glob(current_tumor_path)
+        list_of_samples.append(subsamples)
     return list_of_samples
 def main():
-    ref = '/home/assrivat/simulation_results/ref/fakegenome/fakegenome'
     # 1. data folder, also the parent folder to save results
     data_name = sys.argv[1]
     #parent_dir = "/home/assrivat/haoyun_files/%s" % data_name
@@ -395,20 +414,42 @@ def main():
     snv_caller = sys.argv[6]
     cnv_caller = sys.argv[7]
     sv_caller = sys.argv[8]
+    ref_name = sys.argv[9]
+    ref = '/home/assrivat/simulation_results/ref/{}/{}'.format(ref_name,ref_name)
     samples = getTumorDirectories(data_name)
     # 1. run alignment
     if(align == 1):
         run_align_sort_index(data_name, ref, normal=1, tumor_num=tumor_num, sample_num=sample_num, threads=threads)
         print('sorted normal')
         for i in range(len(samples)): 
-            for j in range(samples[i]):
+            for j in samples[i]:
                 print('sorting:{},{}'.format(i,j))
-                run_align_sort_index(data_name, ref, normal = 0, tumor_num=str(i), sample_num=str(j), threads = threads)
+                r1 = re.compile('samplenum_([0-9]*)')
+                sample_num = r1.findall(j)[0]
+                if 'singlecell' in j:
+                    single_cell_flag = True
+                    regex = re.compile('singlecell_([0-9]*)')
+                    single_cell_num = regex.findall(j)[0]
+                else: 
+                    single_cell_flag = False
+                    single_cell_num = 0
+                run_align_sort_index(data_name, ref, normal = 0, tumor_num=str(i), sample_num=sample_num, threads = threads, single_cell_flag= single_cell_flag, single_cell_num= single_cell_num)
     # 2. run snv calling
     for i in range(len(samples)): 
-        for j in range(samples[i]):
-            run_variant(data_name, ref, tumor_num=str(i), sample_num=str(j), snv_caller=snv_caller, cnv_caller=cnv_caller, sv_caller=sv_caller, threads=threads)
-
+        for j in samples[i]:
+            print(j)
+            print('sorting:{},{}'.format(i,j))
+            r1 = re.compile('samplenum_([0-9]*)')
+            sample_num = r1.findall(j)[0]
+            print(sample_num)
+            if 'singlecell' in j:
+                single_cell_flag = True
+                regex = re.compile('singlecell_([0-9]*)')
+                single_cell_num = regex.findall(j)[0]
+            else: 
+                single_cell_flag = False
+                single_cell_num = 0
+            run_variant(data_name, ref, tumor_num=str(i), sample_num=sample_num, snv_caller=snv_caller, cnv_caller=cnv_caller, sv_caller=sv_caller, threads=threads,single_cell_flag = single_cell_flag,single_cell_num= single_cell_num)
 if __name__ == '__main__':
     main()
     
