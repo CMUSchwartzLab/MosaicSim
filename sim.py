@@ -11,6 +11,7 @@ import time
 import pickle
 import pandas as pd
 from Bio import SeqIO
+from datasketch import *
 import math
 import re
 from parameters import *
@@ -50,6 +51,9 @@ def getDirichletCloneFromDistn(num_clones, alpha_dir, the_distn):
         distn[pos] = distn[pos] + i
     return distn
 
+
+def getKmers(sequence, size):
+    return {sequence[x:x+size].upper() for x in range(len(sequence) - size + 1)}
 
 def getDirichletClone(num_clones, alpha_dir):
     cumulate_product = 1.0
@@ -224,9 +228,12 @@ def aneuploidy(seqs):
     target = GLOBAL_CHROM_NUM[chrom[0]]
     max_reps = 3
     rep_num = random.randint(2, max_reps)
-    for i in range(rep_num-1):
-        GLOBAL_CHROM_NUM.append(target)
-        seqs.append(seq)
+    if (random.random() < 0.2): 
+        del seqs[chrom[0]]
+    else: 
+        for i in range(rep_num-1):
+            GLOBAL_CHROM_NUM.append(target)
+            seqs.append(seq)
     return [-1], [rep_num, chrom[0], target, numchrommap[target]]
 
 
@@ -805,7 +812,7 @@ def runSim(num_clones, coverage, rl, read_loc, floc, batch, root, alpha, erate, 
     else:
         randid = random_str = ''.join(random.choice(
             string.ascii_lowercase) for _ in range(3))
-        f = open(floc + f'singlecell{randid}.fasta', 'w')
+        f = open(floc + f'singlecell.fasta', 'w')
     cov = 0.0
     ratio = rl
     #random_str = 0
@@ -860,8 +867,8 @@ def runPairedSim(num_clones, coverage, rl, fl, read_loc, floc, batch, root, alph
     else:
         randid = random_str = ''.join(
             random.choices(string.ascii_lowercase, k=4))
-        f = open(floc + f'singlecellleft{randid}.fasta', 'w')
-        f2 = open(floc + f'singlecellright{randid}.fasta', 'w')
+        f = open(floc + f'singlecellleft.fasta', 'w')
+        f2 = open(floc + f'singlecellright.fasta', 'w')
     cov = 0.0
     ratio = 2*rl/fl
     #random_str = 0
@@ -894,9 +901,11 @@ def runPairedSim(num_clones, coverage, rl, fl, read_loc, floc, batch, root, alph
                 for sub in split(altchrom, frag_len):
                     random_str = ''.join(random.choices(
                         string.ascii_letters, k=15))
-                    sub = mutateFrag(sub, erate)
+                    #sub = mutateFrag(sub, erate)
                     write1 = sub[:rl]
                     write2 = revc(sub[-rl:])
+                    write1 = mutateFrag(write1, erate)
+                    write2 = mutateFrag(write2, erate)
                     qual = 'K'*len(write1)
                     qual2 = 'K'*len(write2)
                     giga_list.extend([f'@{random_str}', write1, '+', qual])
@@ -916,6 +925,13 @@ def runPairedSim(num_clones, coverage, rl, fl, read_loc, floc, batch, root, alph
     del giga_list2
     del ls
 
+def get_random_str(main_str, substr_len):
+    if(len(main_str) < substr_len): 
+        return main_str, 0
+    else: 
+        idx = random.randrange(0, len(main_str) - substr_len + 1)
+        return main_str[idx : (idx+substr_len)], idx
+
 
 def exonrunSim(num_clones, coverage, rl, rloc, floc, batch, root, exonDict, numchrommap, subblock, alpha, erate, flag=0):
     if(flag == 0):
@@ -925,7 +941,7 @@ def exonrunSim(num_clones, coverage, rl, rloc, floc, batch, root, exonDict, numc
     else:
         randid = random_str = ''.join(random.choice(
             string.ascii_lowercase) for _ in range(3))
-        f = open(floc + f'singlecell{randid}.fasta', 'w')
+        f = open(floc + f'singlecell.fasta', 'w')
     cov = 0.0
     ratio = rl
     #random_str = 0
@@ -982,8 +998,8 @@ def exonrunPairedSim(num_clones, coverage, rl, fl, rloc, floc, batch, root, exon
     else:
         randid = random_str = ''.join(
             random.choices(string.ascii_lowercase, k=4))
-        f = open(floc + f'singlecellleft{randid}.fasta', 'w')
-        f2 = open(floc + f'singlecellright{randid}.fasta', 'w')
+        f = open(floc + f'singlecellleft.fasta', 'w')
+        f2 = open(floc + f'singlecellright.fasta', 'w')
     cov = 0.0
     ratio = 2*rl/fl
     #random_str = 0
@@ -1021,11 +1037,14 @@ def exonrunPairedSim(num_clones, coverage, rl, fl, rloc, floc, batch, root, exon
                             string.ascii_letters, k=15))
                         qual1 = 'K'*len(sub[:rl])
                         qual2 = 'K'*len(sub[-rl:])
-                        sub = mutateFrag(sub, erate)
+                        #sub = mutateFrag(sub, erate)
+                        pair1 = mutateFrag(sub[:rl], erate)
+                        pair2 = mutateFrag(revc(sub[-rl:]), erate)
                         giga_list.extend(
-                            [f'@{random_str}', sub[:rl], '+', qual1])
+                            [f'@{random_str}', pair1, '+', qual1])
                         giga_list2.extend(
-                            [f'@{random_str}', revc(sub[-rl:]), '+', qual2])
+                            [f'@{random_str}', pair2, '+', qual2])
+                chromnum += 1
         for x in giga_list:
             f.write(x)
             f.write('\n')
@@ -1096,8 +1115,8 @@ def lbrunSim(num_tumors, num_clones_list, coverage, base_dir, floc, root, alpha,
 
 print('start')
 ts = time.time()
-numchrommap = {0: 'chr1', 1: 'chr1', 2: 'chr10', 3: 'chr10', 4: 'chr11', 5: 'chr11', 6: 'chr12', 7: 'chr12', 8: 'chr13', 9: 'chr13', 10: 'chr14', 11: 'chr14', 12: 'chr15', 13: 'chr15', 14: 'chr16', 15: 'chr16', 16: 'chr17', 17: 'chr17', 18: 'chr18', 19: 'chr18', 20: 'chr19', 21: 'chr19',
-               22: 'chr2', 23: 'chr2', 24: 'chr20', 25: 'chr20', 26: 'chr21', 27: 'chr21', 28: 'chr22', 29: 'chr22', 30: 'chr3', 31: 'chr3', 32: 'chr4', 33: 'chr4', 34: 'chr5', 35: 'chr5', 36: 'chr6', 37: 'chr6', 38: 'chr7', 39: 'chr7', 40: 'chr8', 41: 'chr8', 42: 'chr9', 43: 'chr9', 44: 'chrX', 45: 'chrY'}
+reversemap = {'chr1':0, 'chr10':2, 'chr11':4, 'chr12':6, 'chr13':8, 'chr14':10, 'chr15':12, 'chr16':14, 'chr17':16, 'chr18':18, 'chr19':20, 'chr2':22, 'chr20':24, 'chr21':26, 'chr22':28, 'chr3':30, 'chr4':32, 'chr5':34, 'chr6':36, 'chr7':38, 'chr8':40, 'chr9':42, 'chrX':44, 'chrY':45} 
+numchrommap = {0: 'chr1', 1: 'chr1', 2: 'chr10', 3: 'chr10', 4: 'chr11', 5: 'chr11', 6: 'chr12', 7: 'chr12', 8: 'chr13', 9: 'chr13', 10: 'chr14', 11: 'chr14', 12: 'chr15', 13: 'chr15', 14: 'chr16', 15: 'chr16', 16: 'chr17', 17: 'chr17', 18: 'chr18', 19: 'chr18', 20: 'chr19', 21: 'chr19', 22: 'chr2', 23: 'chr2', 24: 'chr20', 25: 'chr20', 26: 'chr21', 27: 'chr21', 28: 'chr22', 29: 'chr22', 30: 'chr3', 31: 'chr3', 32: 'chr4', 33: 'chr4', 34: 'chr5', 35: 'chr5', 36: 'chr6', 37: 'chr6', 38: 'chr7', 39: 'chr7', 40: 'chr8', 41: 'chr8', 42: 'chr9', 43: 'chr9', 44: 'chrX', 45: 'chrY'}
 chrom_dict = ['chr1', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19',
               'chr2', 'chr20', 'chr21', 'chr22', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chrX', 'chrY']
 reduced_chrom_dict = ['chr1', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17',
@@ -1121,6 +1140,7 @@ getmemory()
 
 total_num_intervals = 0
 exonDict = {}
+strings_to_idx = []
 for i in chrom_dict:
     exonDict[i] = []
 with open(EXON_FILE, 'r') as f:
@@ -1132,10 +1152,26 @@ with open(EXON_FILE, 'r') as f:
             interval = [start_i, end_i]
             total_num_intervals += 1
             exonDict[chrom].append(interval)
+            strings_to_idx.append(chroms[reversemap[chrom]][start_i:end_i])
 getmemory()
+print(len(strings_to_idx))
+
 makedir(base_working_dir)
 clear_dir(base_working_dir)
 print(base_working_dir)
+if(LSH_hash): 
+    lshindex =[]
+    all_hashes = [MinHash(num_perm=num_perm) for i in range(len(strings_to_idx))]
+    for i in range(len(strings_to_idx)): 
+        kmer_set_i = getKmers(strings_to_idx[i], kmer_len)
+        key_i = str(i)
+        for z in kmer_set_i: 
+            all_hashes[i].update(z.encode('utf8'))
+        lshindex.append((key_i, all_hashes[i]))
+    lsh = MinHashLSH(threshold=thresh, num_perm=num_perm)
+    for i in lshindex: 
+        lsh.insert(i[0],i[1])
+    print('hash index made')
 
 # do reference first
 print('making ref reads')
@@ -1208,8 +1244,28 @@ for tum in range(num_tumors):
     print(muts)
     print('mutated genomes stored')
     getmemory()
+    if(LSH_hash):
+        tumorExonDict = exonDict.copy()
+        strings_per_clone = 10000000
+        set_of_start_indices = set()
+        for i in range(strings_per_clone): 
+            chrom = random.randint(0,45)
+            the_string, string_pos = get_random_str(chroms[chrom], 150)
+            kmer_of_string = getKmers(the_string, kmer_len)
+            m = MinHash(num_perm=num_perm)
+            for shingle in kmer_of_string: 
+                m.update(shingle.encode('utf8'))
+            n = len(lsh.query(m))
+            if(n > 0): 
+                tumorExonDict[chrom].append([string_pos, string_pos+150])
+
+
     for sample in range(num_samples):
         print('starting sample')
+        if(LSH_hash): 
+            exonDictR = tumorExonDict
+        else: 
+            exonDictR = exonDict
         real_working_dir = working_dir + f'samplenum_{sample}/'
         makedir(real_working_dir)
         clear_dir(real_working_dir)
@@ -1238,32 +1294,45 @@ for tum in range(num_tumors):
         if(paired):
             if(WES):
                 exonrunPairedSim(use_nodes, coverage, read_len, frag_len, working_dir, real_working_dir,
-                                 1, root_node, exonDict, numchrommap, 10, alpha, error_rate, flag=0)
+                                 1, root_node, exonDictR, numchrommap, 10, alpha, error_rate, flag=0)
                 for i in range(num_single_cells):
-                    exonrunPairedSim(use_nodes, coverage, read_len, frag_len, working_dir, real_working_dir,
-                                     1, root_node, exonDict, numchrommap, 10, alpha, error_rate, flag=2)
+                    single_cell_dir = working_dir+f'samplenum_{sample}_singlecell_{i}/'
+                    makedir(single_cell_dir)
+                    clear_dir(single_cell_dir)
+                    exonrunPairedSim(use_nodes, coverage, read_len, frag_len, working_dir, single_cell_dir,
+                                     1, root_node, exonDictR, numchrommap, 10, alpha, error_rate, flag=2)
 
             else:
                 runPairedSim(use_nodes, coverage, read_len, frag_len, working_dir,
                              real_working_dir, batch_size, root_node, alpha, error_rate, flag=0)
                 for i in range(num_single_cells):
+                    single_cell_dir = working_dir+f'samplenum_{sample}_singlecell_{i}/'
+                    makedir(single_cell_dir)
+                    clear_dir(single_cell_dir) 
                     runPairedSim(use_nodes, coverage, read_len, frag_len, working_dir,
-                                 real_working_dir, batch_size, root_node, alpha, error_rate, flag=2)
+                                 single_cell_dir, batch_size, root_node, alpha, error_rate, flag=2)
         else:
             if(WES):
                 exonrunSim(use_nodes, coverage, read_len, working_dir, real_working_dir,
-                           1, root_node, exonDict, numchrommap, 10, alpha, error_rate, flag=0)
+                           1, root_node, exonDictR, numchrommap, 10, alpha, error_rate, flag=0)
                 for i in range(num_single_cells):
-                    exonrunSim(use_nodes, coverage, read_len, working_dir, real_working_dir,
-                               1, root_node, exonDict, numchrommap, 10, alpha, error_rate, flag=2)
+                    single_cell_dir = working_dir+f'samplenum_{sample}_singlecell_{i}/'
+                    makedir(single_cell_dir)
+                    clear_dir(single_cell_dir) 
+                    exonrunSim(use_nodes, coverage, read_len, working_dir, single_cell_dir,
+                               1, root_node, exonDictR, numchrommap, 10, alpha, error_rate, flag=2)
 
             else:
                 runSim(use_nodes, coverage, read_len, working_dir,
                        real_working_dir, batch_size, root_node, alpha, error_rate, flag=0)
                 for i in range(num_single_cells):
+                    single_cell_dir = working_dir+f'samplenum_{sample}_singlecell_{i}/'
+                    makedir(single_cell_dir)
+                    clear_dir(single_cell_dir) 
                     runSim(use_nodes, coverage, read_len, working_dir,
-                           real_working_dir, batch_size, root_node, alpha, error_rate, flag=2)
+                           single_cell_dir, batch_size, root_node, alpha, error_rate, flag=2)
 print('finished tumors')
+liquid_biopsy = random.choice(liquid_biopsy_list)
 if(liquid_biopsy):
     lb_dir = base_working_dir + 'liquid_biopsy/'
     makedir(lb_dir)
@@ -1276,3 +1345,4 @@ if(liquid_biopsy):
 
 te = time.time()
 print('time elapsed', te-ts)
+
