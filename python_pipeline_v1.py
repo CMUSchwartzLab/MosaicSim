@@ -224,12 +224,14 @@ def callSV(normal_bam, tumor_bam, ref, result_dir, caller='delly', threads=4):
     prefix = tumor_bam.split('/')[-1].split('.')[0]
     if caller == 'delly':
         # call SV with delly
+        #FIRST CHECK IF PAIRED, WHOLE GENOME 
+        #cmd0 = 'EXPORT OMP_NUMTHREADS='
         cmd1 = '/home/assrivat/delly_v0.9.1_linux_x86_64bit call -o %s/%s.bcf ' % (result_dir, prefix) + \
             '-g %s.fa ' % ref + \
             '%s %s' % (tumor_bam, normal_bam)
         print(cmd1)
         # get vcf output
-        cmd2 = 'bcftools view %s/%s.bcf > %s/%s.vcf' % (result_dir, prefix, result_dir, prefix)
+        cmd2 = '/home/assrivat/bcftool/bin/bcftools view %s/%s.bcf > %s/%s.vcf' % (result_dir, prefix, result_dir, prefix)
         os.system(cmd1)
         os.system(cmd2)
   
@@ -380,14 +382,15 @@ def run_variant(data_name, ref, tumor_num, sample_num, \
             sv_result_dir = '%s/tumor_%s/samplenum_%s/sv' % (result_dir, tumor_num, sample_num)
         else: 
             sv_result_dir = '%s/tumor_%s/samplenum_%s_singlecell_%s/sv' % (result_dir, tumor_num, sample_num,single_cell_num) 
- 
-        if sv_caller == 'delly':
-            delly_dir = sv_result_dir + '/delly'
-            checkpath(delly_dir)
-            callSV(normal_bam, tumor_bam, ref, delly_dir)
-        else:
-            print('Please choose delly...')
-            exit()
+        checking_directory = '/home/assrivat/simulation_results/{}/tumor_{}/samplenum_{}'.format(data_name, tumor_num,sample_num)
+        if(checkPaired(checking_directory)):
+            if sv_caller == 'delly':
+                delly_dir = sv_result_dir + '/delly'
+                checkpath(delly_dir)
+                callSV(normal_bam, tumor_bam, ref, delly_dir)
+            else:
+                print('Please choose delly...')
+                exit()
     
 def getTumorDirectories(data_name): 
     data_path = '/home/assrivat/simulation_results/{}/'.format(data_name)
@@ -398,6 +401,23 @@ def getTumorDirectories(data_name):
         subsamples = glob.glob(current_tumor_path)
         list_of_samples.append(subsamples)
     return list_of_samples
+
+def checkPaired(search_dir):
+    info_file = search_dir+'/parameter_list.txt'
+    #TODO!
+    list_of_parameters = []
+    tracker = 0
+    with open(info_file, 'rb') as txtfile: 
+        for line in txtfile: 
+            key, val = line.decode("utf-8").split("\n")[0].split(":")
+            if(tracker != 9):
+                 list_of_parameters.append(val)
+            tracker += 1
+    if(list_of_parameters[7] == ' True'): 
+        return True
+    else: 
+         return False
+
 def main():
     # 1. data folder, also the parent folder to save results
     data_name = sys.argv[1]
