@@ -9,6 +9,7 @@ import string
 import random
 import time
 import pickle
+import sys
 import pandas as pd
 from Bio import SeqIO
 from datasketch import *
@@ -1115,6 +1116,11 @@ def lbrunSim(num_tumors, num_clones_list, coverage, base_dir, floc, root, alpha,
 
 print('start')
 ts = time.time()
+randomid = sys.argv[1]
+#CHANGE THIS TO  WHERE YOU WANT TO STORE THE DATA!
+base_working_dir = storage_dir+randomid+'/' 
+reference_working_dir = base_working_dir + 'reference/'
+
 reversemap = {'chr1':0, 'chr10':2, 'chr11':4, 'chr12':6, 'chr13':8, 'chr14':10, 'chr15':12, 'chr16':14, 'chr17':16, 'chr18':18, 'chr19':20, 'chr2':22, 'chr20':24, 'chr21':26, 'chr22':28, 'chr3':30, 'chr4':32, 'chr5':34, 'chr6':36, 'chr7':38, 'chr8':40, 'chr9':42, 'chrX':44, 'chrY':45} 
 numchrommap = {0: 'chr1', 1: 'chr1', 2: 'chr10', 3: 'chr10', 4: 'chr11', 5: 'chr11', 6: 'chr12', 7: 'chr12', 8: 'chr13', 9: 'chr13', 10: 'chr14', 11: 'chr14', 12: 'chr15', 13: 'chr15', 14: 'chr16', 15: 'chr16', 16: 'chr17', 17: 'chr17', 18: 'chr18', 19: 'chr18', 20: 'chr19', 21: 'chr19', 22: 'chr2', 23: 'chr2', 24: 'chr20', 25: 'chr20', 26: 'chr21', 27: 'chr21', 28: 'chr22', 29: 'chr22', 30: 'chr3', 31: 'chr3', 32: 'chr4', 33: 'chr4', 34: 'chr5', 35: 'chr5', 36: 'chr6', 37: 'chr6', 38: 'chr7', 39: 'chr7', 40: 'chr8', 41: 'chr8', 42: 'chr9', 43: 'chr9', 44: 'chrX', 45: 'chrY'}
 chrom_dict = ['chr1', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19',
@@ -1246,7 +1252,7 @@ for tum in range(num_tumors):
     getmemory()
     if(LSH_hash):
         tumorExonDict = exonDict.copy()
-        strings_per_clone = 10000000
+        strings_per_clone = LSHStringNum
         set_of_start_indices = set()
         for i in range(strings_per_clone): 
             chrom = random.randint(0,45)

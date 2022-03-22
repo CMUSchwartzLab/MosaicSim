@@ -67,6 +67,10 @@ def compareVcftoInfoSV(vcf_file, info_file, mut_file, sv_type):
 	d = f.readlines()[0]
 	actual_m = ast.literal_eval(m2)
 	actual_d = ast.literal_eval(d)
+	if(sv_type == 4): 
+		checker_flag = "<INV>"
+	else: 
+		checker_flag = '<DEL>'
 	all_actual_muts = []
 	counter = 0
 	for i in range(len(actual_d)):
@@ -82,11 +86,12 @@ def compareVcftoInfoSV(vcf_file, info_file, mut_file, sv_type):
 		for i in d2: 
 			z = i.split('\t')
 			if(len(z) > 9 and z[0] in clist):
-				string_cont = z[7]
-				match = re.findall('END=([0-9]*)', string_cont)
-				regex_parsed = int(match[0])
-				tup = (int(z[1]), regex_parsed, z[0])
-				called_muts.append(tup)
+				if(z[4] == checker_flag):
+					string_cont = z[7]
+					match = re.findall('END=([0-9]*)', string_cont)
+					regex_parsed = int(match[0])
+					tup = (int(z[1]), regex_parsed, z[0])
+					called_muts.append(tup)
 	else: 
 		called_muts = []
 		for ind_file in vcf_file: 
@@ -95,11 +100,12 @@ def compareVcftoInfoSV(vcf_file, info_file, mut_file, sv_type):
 			for i in d2: 
 				z = i.split('\t')
 				if(len(z) > 9 and z[0] in clist):
-					string_cont = z[7]
-					match = re.findall('END=([0-9]*)', string_cont)
-					regex_parsed = int(match[0])
-					tup = (int(z[1]), regex_parsed, z[0])
-					called_muts.append(tup)
+					if(z[4] == checker_flag):
+						string_cont = z[7]
+						match = re.findall('END=([0-9]*)', string_cont)
+						regex_parsed = int(match[0])
+						tup = (int(z[1]), regex_parsed, z[0])
+						called_muts.append(tup)
 	metrika = intervalSetMetric(called_muts, all_actual_muts)
 	return metrika
 
