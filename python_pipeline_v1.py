@@ -470,6 +470,7 @@ def main():
                 single_cell_flag = False
                 single_cell_num = 0
             run_variant(data_name, ref, tumor_num=str(i), sample_num=sample_num, snv_caller=snv_caller, cnv_caller=cnv_caller, sv_caller=sv_caller, threads=threads,single_cell_flag = single_cell_flag,single_cell_num= single_cell_num)
+    
 if __name__ == '__main__':
     main()
     

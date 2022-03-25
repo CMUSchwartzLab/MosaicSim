@@ -55,10 +55,13 @@ def intervalSetMetric(interval_a, interval_b):
 		else:
 			metric_list.append([current_count/total_intervals, total_comparate])
 	run_metric = 0 
-	for i in metric_list: 
-		new_value = i[0]*(i[1]/event_num)
-		run_metric += new_value
-	return run_metric
+	if(event_num == 0): 
+		return 0
+	else:
+		for i in metric_list: 
+			new_value = i[0]*(i[1]/event_num)
+			run_metric += new_value
+		return run_metric
 		
 def compareVcftoInfoSV(vcf_file, info_file, mut_file, sv_type): 
 	f = open(info_file, 'r')

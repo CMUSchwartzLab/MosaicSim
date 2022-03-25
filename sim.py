@@ -27,6 +27,23 @@ def getmemory():
 GLOBAL_CHROM_NUM = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
                     22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
 
+def getSVSize(chromosome_size = 1e8):
+    return_val1 = np.random.negative_binomial(0.1, 0.0001)
+    return_val2 = np.random.negative_binomial(1, 0.00001)
+    return_val3 = np.random.negative_binomial(200, 0.00002) 
+    zed = random.random()
+    if(zed < 0.5): 
+        o_return_val = return_val1
+    elif(zed > 0.5 and zed < 0.995):
+        o_return_val = return_val2
+    else: 
+        o_return_val = return_val3
+    if (o_return_val < 10): 
+        return 10
+    elif(o_return_val > 2e7): 
+        return 2e7
+    else: 
+        return int((chromosome_size/1e8)*o_return_val)
 
 def getDirichletCloneFromDistn(num_clones, alpha_dir, the_distn):
     cumulate_product = 1.0
@@ -206,9 +223,12 @@ def CNV(seqs):
     n = len(seq)
     if (n == 1 or n == 0):
         return[-1], [-1, chrom[0]]
-    lowbd = int(0.0001*n)
-    upbd = int(0.1*n)
-    dist = int(random.randint(lowbd, upbd))
+    #lowbd = int(0.0001*n)
+    #upbd = int(0.1*n)
+    #dist = int(random.randint(lowbd, upbd))
+    dist = n
+    while(dist > 0.1*n):
+        dist = getSVSize()
     stidx = random.randint(0, n-1)
     edidx = min(stidx + dist, n-1)
     max_reps = 5
@@ -250,9 +270,12 @@ def deletion(seqs):
         seqs[chrom[0]] = ''
         return [-1], [0, chrom[0], target]
     else:
-        lowbd = int(0.01*n)
-        upbd = int(0.1*n)
-        dist = int(random.randint(lowbd, upbd))
+        #lowbd = int(0.0001*n)
+        #upbd = int(0.01*n)
+        #dist = int(random.randint(lowbd, upbd))
+        dist = n
+        while(dist > 0.1*n):
+            dist = getSVSize() 
         stidx = random.randint(0, n-1)
         edidx = min(stidx + dist, n-1)
         start_string = seq[:stidx]
@@ -270,9 +293,12 @@ def inversion(seqs):
     n = len(seq)
     if (n == 0 or n == 1):
         return [-1], [-1, chrom[0]]
-    lowbd = int(0.0001*n)
-    upbd = int(0.1*n)
-    dist = int(random.randint(lowbd, upbd))
+    #lowbd = int(0.0001*n)
+    #upbd = int(0.1*n)
+    #dist = int(random.randint(lowbd, upbd))
+    dist = n
+    while(dist > 0.1*n):
+        dist = getSVSize() 
     stidx = random.randint(0, n-1)
     edidx = min(stidx + dist, n-1)
     subseq = seq[stidx:edidx]
@@ -281,9 +307,12 @@ def inversion(seqs):
     end_string = seq[edidx:]
     full_string = start_string + reversed_subseq + end_string
     seqs[chrom[0]] = full_string
-    lowbd = int(0.0001*n)
-    upbd = int(0.1*n)
-    dist = int(random.randint(lowbd, upbd))
+    #lowbd = int(0.0001*n)
+    #upbd = int(0.1*n)
+    #dist = int(random.randint(lowbd, upbd))
+    dist = n
+    while(dist > 0.1*n):
+        dist = getSVSize() 
     stidx = random.randint(0, n-1)
     edidx = min(stidx + dist, n-1)
     subseq = seq[stidx:edidx]
@@ -303,9 +332,12 @@ def kataegis(seqs):
     n = len(seq)
     if (n == 0 or n == 1):
         return [-1], [-1, chrom[0]]
-    lowbd = int(0.1*n)
-    upbd = int(0.2*n)
-    dist = int(random.randint(lowbd, upbd))
+    #lowbd = int(0.1*n)
+    #upbd = int(0.2*n)
+    #dist = int(random.randint(lowbd, upbd))
+    dist = n
+    while(dist > 0.1*n):
+        dist = getSVSize() 
     stidx = random.randint(0, n-1)
     edidx = min(stidx + dist, n-1)
     type_of_variation = random.randint(0, 2)
@@ -394,9 +426,12 @@ def chromothripsis(seqs):
     splits = 0
     while(NotLongEnough):
         splits = random.randint(2, 100)
-        lowbd = int(0.1*n)
-        upbd = int(0.9*n)
-        distance = int(random.randint(lowbd, upbd))
+        #lowbd = int(0.1*n)
+        #upbd = int(0.9*n)
+        #distance = int(random.randint(lowbd, upbd))
+        dist = n
+        while(dist > 0.1*n):
+            dist = getSVSize()
         stidx = random.randint(0, n-1)
         edidx = min(stidx + distance, n-1)
         dist = edidx - stidx
@@ -1351,4 +1386,3 @@ if(liquid_biopsy):
 
 te = time.time()
 print('time elapsed', te-ts)
-

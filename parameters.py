@@ -21,29 +21,29 @@ full_genome = './data/hg38.fa'
 EXON_FILE = './data/exonsegments.txt'
 
 #parameters for the full simulation. The program will sample randomly from each list
-num_samples_list = [5] 
+num_samples_list = [8] 
 num_tumors_list = [1]
 # frag length should be at least 100, and the read length should be less than the frag length
-read_len_list = [75,125,1000,10000]
-frag_len_list = [150,200,2000,20000]
+read_len_list = [125]
+frag_len_list = [200]
 #concentration of the clones
 alpha_list = [10]
 #can be True or False for these
-paired_list = [True, False]
-WES_list = [False, True]
+paired_list = [True]
+WES_list = [False]
 
 use_leaf_only = False
-error_rate_list = [0.0, 0.0, 0.0, 0.00001, 0.00001,0.0001, 0.001]
+error_rate_list = [0.0]
 clone_list = [5]
 #rate list define the tumor mutations, can define or change however you want. 
 ultralow_rates_list = [1e-15]
 low_rates_list = [1e-15, 1e-13, 1e-10]
 medium_rates_list = [5e-9, 4e-10, 9e-10, 3e-9]
 high_rates_list = [1e-8, 9e-9, 5e-9]
-ultrahigh_rates_list = [1e-8,5e-7,9e-7,5e-8,2e-7]
-coverage_list = [2, 5, 10, 20, 25, 30, 30, 30, 40, 50]
+ultrahigh_rates_list = [5e-8,5e-7,6e-7,5e-8,1e-7]
+coverage_list = [2, 5, 10, 15,15, 25,25, 30,30,50]
 pop_list = [8e8] #recommend to keep close to this value
-num_single_cell_list = [0,0,1]
+num_single_cell_list = [0]
 liquid_biopsy_list = [False]
 batch_size = 1
 LSH_hash = False #If false, doesn't explore alternate reads for WES and uses breakpoints in EXON_FILE
@@ -75,6 +75,6 @@ if(random.random() < 0.5):
 else: 
 	random_list = ultrahigh_rates_list
 #SNV, CNV, DEL, DELSMALL, INVERSION, TRANSLOCATION, BFB, CHROMOTHRIP, CHROMOPLEX, INSERTIONSMALL, KATAEGIS, ANEUPLOIDY
-list_of_rates = [ultrahigh_rates_list, ultralow_rates_list, ultrahigh_rates_list, ultralow_rates_list, ultrahigh_rates_list, ultralow_rates_list,ultralow_rates_list, ultralow_rates_list, ultralow_rates_list, ultralow_rates_list, ultralow_rates_list, ultralow_rates_list]
+list_of_rates = [ultrahigh_rates_list, ultralow_rates_list, high_rates_list, ultralow_rates_list, high_rates_list, ultralow_rates_list,ultralow_rates_list, ultralow_rates_list, ultralow_rates_list, ultralow_rates_list, ultralow_rates_list, ultralow_rates_list]
  
 

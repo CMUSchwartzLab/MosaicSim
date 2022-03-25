@@ -7,26 +7,17 @@ import scipy.stats as st
 from scipy.stats import binom
 
 
-clonal_times = np.array([[2, 3.1e9], [5, 1.3e10], [10, 2.9e10], [30,9.33e10], [100, 3.14e11]])
-X = clonal_times[:,0]
-X = X.reshape(-1,1)
-y = clonal_times[:,1]
-y = y.reshape(-1,1)
-reg = LinearRegression().fit(X, y)
-
-x1 = 360
-x2 = 6
+lowerb = 1
+upperbd = 30
+x1 = 50
+x2 = 2
 R = 1
 sig1 = []
 sig2 = []
 sig3 = []
-for i in range(4000):
-    num_clones = random.randint(1,100)
-    poisson_rate_i =reg.predict([[num_clones]])
-    t1 = np.random.poisson(poisson_rate_i)[0][0]
-    nc2 = random.randint(1,100)
-    pr2 = reg.predict([[nc2]])
-    t2 = np.random.poisson(pr2)[0][0]
+for i in range(400):
+    t1 = random.uniform(lowerb,upperbd)
+    t2 = random.uniform(lowerb,upperbd)
     d = t2/t1
     rho = R/d
     c1 = (x1-x2*rho)/(math.sqrt(x1 +x2*rho**2))
@@ -39,13 +30,9 @@ for i in range(4000):
     sig2.append(p2)
     sig3.append(p3)
 cpval = []
-for i in range(4000): 
-    num_clones = random.randint(1,100)
-    poisson_rate_i =reg.predict([[num_clones]])
-    t1 = np.random.poisson(poisson_rate_i)[0][0]
-    nc2 = random.randint(1,100)
-    pr2 = reg.predict([[nc2]])
-    t2 = np.random.poisson(pr2)[0][0]
+for i in range(400): 
+    t1 = random.uniform(lowerb,upperbd)
+    t2 = random.uniform(lowerb,upperbd)
     d = t1/t2
     rho = R/d
     q = rho/(1+rho)
@@ -57,3 +44,4 @@ print(statistics.mean(sig1))
 print(statistics.mean(sig2))
 print(statistics.mean(sig3))
 print(statistics.mean(cpval))
+print(statistics.variance(cpval))
