@@ -62,7 +62,64 @@ def intervalSetMetric(interval_a, interval_b):
 			new_value = i[0]*(i[1]/event_num)
 			run_metric += new_value
 		return run_metric
-		
+def gridcompareVcftoInfoSV(vcf_file, info_file, mut_file, sv_type = 4): 
+	f = open(info_file, 'r')
+	m = open(mut_file, 'r')
+	m2 = m.readlines()[0]
+	d = f.readlines()[0]
+	actual_m = ast.literal_eval(m2)
+	actual_d = ast.literal_eval(d)
+	all_actual_muts = []
+	counter = 0
+	for i in range(len(actual_d)):
+		for k in range(len(actual_d[i])):
+			if(int(actual_m[i][k]) != 0):
+				tup = (int(actual_d[i][k][0]), int(actual_d[i][k][1]), actual_d[i][k][-1])
+				all_actual_muts.append(tup)
+	all_actual_muts.sort(key = lambda x:x[2])
+	if(isinstance(vcf_file, str)):
+		f2 = open(vcf_file, 'rt')
+		d2 = f2.readlines()
+		called_muts = []
+		for i in d2: 
+			z = i.split('\t')
+			if(len(z) > 9 and z[0] in clist):
+				tup = (int(z[1]), z[0])
+				called_muts.append(tup)
+	else: 
+		called_muts = []
+		for ind_file in vcf_file: 
+			f2 = open(ind_file, 'rt')
+			d2 = f2.readlines()
+			for i in d2: 
+				z = i.split('\t')
+				if(len(z) > 9 and z[0] in clist):
+					tup = (int(z[1]), z[0])
+					called_muts.append(tup)
+	bkpt_list = []
+	original_bkpts = []
+	for i in clist:
+		count = 0 
+		c2 = 0
+		for j in called_muts: 
+			if(j[1] == i): 
+				count += 1	
+		bkpt_list.append(count)
+		for k in all_actual_muts: 
+			if(k[2] == i):
+				c2 += 2
+		original_bkpts.append(c2)
+	original_bkpts = [x+1 for x in original_bkpts]
+	ztot = sum(original_bkpts)
+	tot = sum(bkpt_list)
+	overall = ztot + tot
+	val = 0	
+	for i in range(len(bkpt_list)): 
+		frac = bkpt_list[i]/original_bkpts[i]
+		weight = (bkpt_list[i] + original_bkpts[i])/overall 
+		val += weight*frac
+	return val
+
 def compareVcftoInfoSV(vcf_file, info_file, mut_file, sv_type): 
 	f = open(info_file, 'r')
 	m = open(mut_file, 'r')
@@ -71,9 +128,9 @@ def compareVcftoInfoSV(vcf_file, info_file, mut_file, sv_type):
 	actual_m = ast.literal_eval(m2)
 	actual_d = ast.literal_eval(d)
 	if(sv_type == 4): 
-		checker_flag = "<INV>"
+		checker_flag = ["<INV>"]
 	else: 
-		checker_flag = '<DEL>'
+		checker_flag = ['<DEL>', '<DUP>']
 	all_actual_muts = []
 	counter = 0
 	for i in range(len(actual_d)):
@@ -89,7 +146,7 @@ def compareVcftoInfoSV(vcf_file, info_file, mut_file, sv_type):
 		for i in d2: 
 			z = i.split('\t')
 			if(len(z) > 9 and z[0] in clist):
-				if(z[4] == checker_flag):
+				if(z[4] in checker_flag):
 					string_cont = z[7]
 					match = re.findall('END=([0-9]*)', string_cont)
 					regex_parsed = int(match[0])
@@ -103,7 +160,7 @@ def compareVcftoInfoSV(vcf_file, info_file, mut_file, sv_type):
 			for i in d2: 
 				z = i.split('\t')
 				if(len(z) > 9 and z[0] in clist):
-					if(z[4] == checker_flag):
+					if(z[4] in checker_flag):
 						string_cont = z[7]
 						match = re.findall('END=([0-9]*)', string_cont)
 						regex_parsed = int(match[0])
@@ -196,7 +253,7 @@ def checkPaired(search_dir):
 
 
 def main():
-	
+	caller_name = 'delly'	
 	data_name = sys.argv[1]
 	result_file = open('/home/assrivat/simulation_results/results/{}/SNPcallerstats.txt'.format(data_name), 'w')
 	sv_resultfile = open('/home/assrivat/simulation_results/results/{}/SVcallerstats.txt'.format(data_name),'w')
@@ -228,14 +285,14 @@ def main():
 				subtuples_list.append((sample_num,single_cell_num))	
 				results_dir = '/home/assrivat/simulation_results/results/{}/tumor_{}/samplenum_{}_singlecell_{}/snv/strelka/results/variants/somatic.snvs.vcf.gz'.format(data_name, i,sample_num, single_cell_num)
 				if(sv_flag): 
-					sv_results_dir = '/home/assrivat/simulation_results/results/{}/tumor_{}/samplenum_{}_singlecell_{}/sv/delly/tumorB.vcf'.format(data_name, i,sample_num, single_cell_num)
+					sv_results_dir = '/home/assrivat/simulation_results/results/{}/tumor_{}/samplenum_{}_singlecell_{}/sv/{}/tumorB_{}_{}_{}.vcf'.format(data_name, i,sample_num, single_cell_num,caller_name, i,sample_num, single_cell_num)
 			else: 
 				single_cell_flag = False
 				single_cell_num = 0
 				subtuples_list.append((sample_num,-1))
 				results_dir = '/home/assrivat/simulation_results/results/{}/tumor_{}/samplenum_{}/snv/strelka/results/variants/somatic.snvs.vcf.gz'.format(data_name, i,sample_num)
 				if(sv_flag): 
-					sv_results_dir = '/home/assrivat/simulation_results/results/{}/tumor_{}/samplenum_{}/sv/delly/tumorB.vcf'.format(data_name, i,sample_num)
+					sv_results_dir = '/home/assrivat/simulation_results/results/{}/tumor_{}/samplenum_{}/sv/{}/tumorB_{}_{}.vcf'.format(data_name, i,sample_num,caller_name, i, sample_num)
 			aggregate_vcfs.append(results_dir)
 			if(sv_flag): 
 				aggregate_sv_vcfs.append(sv_results_dir)
@@ -270,14 +327,14 @@ def main():
 				sv_subaggregate_list = []
 				for item in total_run: 
 					if(item[1] == -1): 
-						the_sv_dir = '/home/assrivat/simulation_results/results/{}/tumor_{}/samplenum_{}/sv/delly/tumorB.vcf'.format(data_name, i, item[0])
+						the_sv_dir = '/home/assrivat/simulation_results/results/{}/tumor_{}/samplenum_{}/sv/{}/tumorB_{}_{}.vcf'.format(data_name, i, item[0],caller_name,i,item[0])
 					else: 
-						the_sv_dir = '/home/assrivat/simulation_results/results/{}/tumor_{}/samplenum_{}_singlecell_{}/sv/delly/tumorB.vcf'.format(data_name, i, item[0], item[1])
+						the_sv_dir = '/home/assrivat/simulation_results/results/{}/tumor_{}/samplenum_{}_singlecell_{}/sv/{}/tumorB_{}_{}_{}.vcf'.format(data_name, i, item[0], item[1],caller_name,i,item[0],item[1])
 				sv_subaggregate_list.append(the_sv_dir)
 				deletion_metric = compareVcftoInfoSV(sv_subaggregate_list, f,m, 2)
 				inversion_metric = compareVcftoInfoSV(sv_subaggregate_list, f,m,4)
 				sv_resultfile.write('tumor {}, sample {}, del met {}, inv met {}\n'.format(i,k,deletion_metric, inversion_metric))
-				sv_param_list.extend([i,k,deletion_metric, inversion_metric])
+				sv_param_list.extend([i,k,str(-1),deletion_metric, inversion_metric])
 				sv_lol_vals.append(sv_param_list)
 		tp,fp,mm = compareVcftoInfoSNV(aggregate_vcfs,f,m)
 		new_write_list = ['-1']*13
@@ -295,8 +352,8 @@ def main():
 		subtuples_list.clear()
 	final_results = pd.DataFrame(list_of_list_vals, columns=['num_leaves', 'dir_conc','cell_pop', 'coverage', 'num_single_cells', 'read_len', 'frag_len', 'paired', 'exome','poisson_time', 'error_rate','tumor_num', 'sample_num', 'aggregate_tumor','true_positive','false_positive','missed_mutation'])
 	sv_final_results = pd.DataFrame(sv_lol_vals, columns=['num_leaves', 'dir_conc','cell_pop', 'coverage', 'num_single_cells', 'read_len', 'frag_len', 'paired', 'exome','poisson_time', 'error_rate','tumor_num', 'sample_num', 'aggregate_tumor','del metric', 'inv metric'])
-	final_results.to_csv('/home/assrivat/simulation_results/results/{}/resultsSNP.csv'.format(data_name), sep='\t')
-	sv_final_results.to_csv('/home/assrivat/simulation_results/results/{}/resultsSV.csv'.format(data_name), sep='\t')
+	final_results.to_csv('/home/assrivat/simulation_results/results/{}/{}_resultsSNP.csv'.format(data_name,data_name), sep='\t')
+	sv_final_results.to_csv('/home/assrivat/simulation_results/results/{}/{}_resultsSV.csv'.format(data_name,data_name), sep='\t')
 if __name__ == '__main__':
 	main()
  

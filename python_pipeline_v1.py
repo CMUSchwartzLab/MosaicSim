@@ -234,6 +234,9 @@ def callSV(normal_bam, tumor_bam, ref, result_dir, caller='delly', threads=4):
         cmd2 = '/home/assrivat/bcftool/bin/bcftools view %s/%s.bcf > %s/%s.vcf' % (result_dir, prefix, result_dir, prefix)
         os.system(cmd1)
         os.system(cmd2)
+    if caller == 'gridss': 
+        cmd = '/home/assrivat/gridss --jar /home/assrivat/gridss-2.13.2-gridss-jar-with-dependencies.jar -r {}.fa -t 8 -o {}/{}.vcf {} {}'.format(ref, result_dir, prefix, normal_bam, tumor_bam)
+        os.system(cmd)
   
 
 
@@ -318,7 +321,10 @@ def run_align_sort_index(data_name, ref, threads=4, normal=1, tumor_num=0, sampl
         # 1. define variables
         input_file = glob.glob('%s/*.fasta' % tumor_dir)
         print(input_file)
-        output_file = tumor_res_dir + '/tumorB.sam'
+        if(single_cell_flag): 
+            output_file = tumor_res_dir + '/tumorB_{}_{}_{}.sam'.format(tumor_num, sample_num, single_cell_num)
+        else:
+            output_file = tumor_res_dir + '/tumorB_{}_{}.sam'.format(tumor_num, sample_num)
 
     ref = ref
     alignment(input_file, output_file, ref, aligner=aligner, threads=threads)
@@ -332,17 +338,20 @@ def run_variant(data_name, ref, tumor_num, sample_num, \
                 sv_caller="None", 
                 wgs=True,
                 BED=None,
-                threads=4, single_cell_flag = False, single_cell_num=0):
+                threads=4, single_cell_flag = False, single_cell_num=0, align_flag = False):
     '''
     call variants specific caller
     '''
     result_dir = "/home/assrivat/simulation_results/results/%s" % data_name
     # 0. specify the parameters
-    normal_bam = '/home/assrivat/simulation_results/results/{}/normal/normal.sorted.bam'.format(data_name)
+    if(align_flag):
+        normal_bam = '/home/assrivat/simulation_results/results/{}/normal/normal.sorted.bam'.format(data_name)
+    else: 
+        normal_bam = '/home/assrivat/simulation_results/results/normal/normal.sorted.bam'
     if not single_cell_flag:
-        tumor_bam = '%s/tumor_%s/samplenum_%s/tumorB.sorted.bam' % (result_dir, tumor_num, sample_num)
+        tumor_bam = '%s/tumor_%s/samplenum_%s/tumorB_%s_%s.sorted.bam' % (result_dir, tumor_num, sample_num, tumor_num, sample_num)
     else:
-        tumor_bam = '{}/tumor_{}/samplenum_{}_singlecell_{}/tumorB.sorted.bam'.format(result_dir, tumor_num,sample_num, single_cell_num)
+        tumor_bam = '{}/tumor_{}/samplenum_{}_singlecell_{}/tumorB_{}_{}_{}.sorted.bam'.format(result_dir, tumor_num,sample_num, single_cell_num, tumor_num, sample_num, single_cell_num)
     ref = ref
     # 1. call snv
     if snv_caller != 'None':
@@ -388,6 +397,10 @@ def run_variant(data_name, ref, tumor_num, sample_num, \
                 delly_dir = sv_result_dir + '/delly'
                 checkpath(delly_dir)
                 callSV(normal_bam, tumor_bam, ref, delly_dir)
+            elif sv_caller == 'gridss':
+                gridss_dir = sv_result_dir + '/gridss'
+                checkpath(gridss_dir)
+                callSV(normal_bam, tumor_bam, ref, gridss_dir, caller = 'gridss', threads = threads)
             else:
                 print('Please choose delly...')
                 exit()
@@ -435,12 +448,14 @@ def main():
     cnv_caller = sys.argv[7]
     sv_caller = sys.argv[8]
     ref_name = sys.argv[9]
+    align_normal = True
     ref = '/home/assrivat/simulation_results/ref/{}/{}'.format(ref_name,ref_name)
     samples = getTumorDirectories(data_name)
     # 1. run alignment
     if(align == 1):
-        run_align_sort_index(data_name, ref, normal=1, tumor_num=tumor_num, sample_num=sample_num, threads=threads)
-        print('sorted normal')
+        if(align_normal):
+            run_align_sort_index(data_name, ref, normal=1, tumor_num=tumor_num, sample_num=sample_num, threads=threads)
+            print('sorted normal')
         for i in range(len(samples)): 
             for j in samples[i]:
                 print('sorting:{},{}'.format(i,j))
@@ -469,7 +484,7 @@ def main():
             else: 
                 single_cell_flag = False
                 single_cell_num = 0
-            run_variant(data_name, ref, tumor_num=str(i), sample_num=sample_num, snv_caller=snv_caller, cnv_caller=cnv_caller, sv_caller=sv_caller, threads=threads,single_cell_flag = single_cell_flag,single_cell_num= single_cell_num)
+            run_variant(data_name, ref, tumor_num=str(i), sample_num=sample_num, snv_caller=snv_caller, cnv_caller=cnv_caller, sv_caller=sv_caller, threads=threads,single_cell_flag = single_cell_flag,single_cell_num= single_cell_num, align_flag = align_normal)
     
 if __name__ == '__main__':
     main()

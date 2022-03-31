@@ -38,8 +38,8 @@ def getSVSize(chromosome_size = 1e8):
         o_return_val = return_val2
     else: 
         o_return_val = return_val3
-    if (o_return_val < 10): 
-        return 10
+    if (o_return_val < 50): 
+        return 50
     elif(o_return_val > 2e7): 
         return 2e7
     else: 
@@ -1232,14 +1232,14 @@ getmemory()
 if(ref_paired):
     if(ref_WES):
         exonrunPairedSim(ref_int_nodes, ref_coverage, ref_read_len, ref_frag_len, reference_working_dir,
-                         reference_working_dir, 1, ref_root_node, exonDict, numchrommap, 10, ref_alpha, ref_erate, flag=1)
+                         reference_working_dir, batch_size, ref_root_node, exonDict, numchrommap, subblock_size, ref_alpha, ref_erate, flag=1)
     else:
         runPairedSim(ref_int_nodes, ref_coverage, ref_read_len, ref_frag_len, reference_working_dir,
                      reference_working_dir, batch_size, ref_root_node, ref_alpha, ref_erate, flag=1)
 else:
     if(ref_WES):
         exonrunSim(ref_int_nodes, ref_coverage, ref_read_len, reference_working_dir, reference_working_dir,
-                   1, ref_root_node, exonDict, numchrommap, 10, ref_alpha, ref_erate, flag=1)
+                   batch_size, ref_root_node, exonDict, numchrommap, subblock_size, ref_alpha, ref_erate, flag=1)
     else:
         runSim(ref_int_nodes, ref_coverage, ref_read_len, reference_working_dir,
                reference_working_dir, batch_size, ref_root_node, ref_alpha, ref_erate, flag=1)
@@ -1335,13 +1335,13 @@ for tum in range(num_tumors):
         if(paired):
             if(WES):
                 exonrunPairedSim(use_nodes, coverage, read_len, frag_len, working_dir, real_working_dir,
-                                 1, root_node, exonDictR, numchrommap, 10, alpha, error_rate, flag=0)
+                                 batch_size, root_node, exonDictR, numchrommap, subblock_size, alpha, error_rate, flag=0)
                 for i in range(num_single_cells):
                     single_cell_dir = working_dir+f'samplenum_{sample}_singlecell_{i}/'
                     makedir(single_cell_dir)
                     clear_dir(single_cell_dir)
                     exonrunPairedSim(use_nodes, coverage, read_len, frag_len, working_dir, single_cell_dir,
-                                     1, root_node, exonDictR, numchrommap, 10, alpha, error_rate, flag=2)
+                                     batch_size, root_node, exonDictR, numchrommap, subblock_size, alpha, error_rate, flag=2)
 
             else:
                 runPairedSim(use_nodes, coverage, read_len, frag_len, working_dir,
@@ -1355,13 +1355,13 @@ for tum in range(num_tumors):
         else:
             if(WES):
                 exonrunSim(use_nodes, coverage, read_len, working_dir, real_working_dir,
-                           1, root_node, exonDictR, numchrommap, 10, alpha, error_rate, flag=0)
+                           batch_size, root_node, exonDictR, numchrommap, subblock_size, alpha, error_rate, flag=0)
                 for i in range(num_single_cells):
                     single_cell_dir = working_dir+f'samplenum_{sample}_singlecell_{i}/'
                     makedir(single_cell_dir)
                     clear_dir(single_cell_dir) 
                     exonrunSim(use_nodes, coverage, read_len, working_dir, single_cell_dir,
-                               1, root_node, exonDictR, numchrommap, 10, alpha, error_rate, flag=2)
+                               batch_size, root_node, exonDictR, numchrommap, subblock_size, alpha, error_rate, flag=2)
 
             else:
                 runSim(use_nodes, coverage, read_len, working_dir,
