@@ -15,4 +15,4 @@ Each run of the simulator is defined by first adjusting the study design and sim
 To run the simulation, simply execute "python3 sim.py [DIR_NAME]" in the repository. DIR_NAME defines the name of the directory under storage_dir where all your data will be stored for the simulation run.
 
 # System Requirements
-The program should take less than 30G of memory and only one core per execution. The storage requirements depend on the parameters of the simulation. Run time was approximately 4 and a half hours for 3, 30x WGS samples.
+The program should, for standard sequencing settings, take less than 40G of memory and only one core per execution. The storage requirements depend on the parameters of the simulation. Run time was approximately 3 and a half hours for 3, 30x WGS samples.
