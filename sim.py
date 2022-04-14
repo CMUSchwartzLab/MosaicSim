@@ -433,7 +433,7 @@ def chromothripsis(seqs):
         while(dist > 0.1*n):
             dist = getSVSize()
         stidx = random.randint(0, n-1)
-        edidx = min(stidx + distance, n-1)
+        edidx = min(stidx + dist, n-1)
         dist = edidx - stidx
         attempts += 1
         if(dist > splits):
