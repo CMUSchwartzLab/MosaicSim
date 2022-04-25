@@ -1,0 +1,10 @@
+	num_leaves	dir_conc	cell_pop	coverage	num_single_cells	read_len	frag_len	paired	exome	poisson_time	error_rate	tumor_num	sample_num	aggregate_tumor	true_positive	false_positive	missed_mutation
+0	 5	 10	 800000000.0	 25	 0	 150	 200	 True	 False	 836693125.0681314	 1e-05	0	0	-1	1	88	1
+1	 5	 10	 800000000.0	 25	 0	 2000	 3000	 True	 True	 836693125.0681314	 0.0	0	1	-1	0	0	2
+2	 5	 10	 800000000.0	 25	 0	 75	 150	 True	 True	 836693125.0681314	 1e-05	0	2	-1	0	1168	2
+3	 5	 10	 800000000.0	 10	 0	 150	 200	 True	 True	 836693125.0681314	 1e-05	0	3	-1	0	1313	2
+4	 5	 10	 800000000.0	 15	 0	 2000	 3000	 True	 True	 836693125.0681314	 0.0	0	4	-1	0	0	2
+5	 5	 10	 800000000.0	 25	 0	 75	 150	 True	 True	 836693125.0681314	 1e-05	0	5	-1	0	1132	2
+6	 5	 10	 800000000.0	 15	 0	 500	 1000	 True	 False	 836693125.0681314	 0.0001	0	6	-1	0	106	2
+7	 5	 10	 800000000.0	 2	 0	 150	 200	 True	 True	 836693125.0681314	 0.0	0	7	-1	0	0	2
+8	-1	-1	-1	-1	-1	-1	-1	-1	-1	-1	-1	-1	-1	0	1	3806	1

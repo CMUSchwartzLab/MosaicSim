@@ -1,0 +1,3 @@
+	num_leaves	dir_conc	cell_pop	coverage	num_single_cells	read_len	frag_len	paired	exome	poisson_time	error_rate	tumor_num	sample_num	aggregate_tumor	del metric	inv metric
+0	 5	 10	 800000000.0	 10	 0	 75	 150	 True	 True	 2721257479.726558	 1e-05	0	0	0.059006211180124224	0.0	
+1	-1	-1	-1	-1	-1	-1	-1	-1	-1	-1	-1	-1	-1	0.0	0.059006211180124224	0.0

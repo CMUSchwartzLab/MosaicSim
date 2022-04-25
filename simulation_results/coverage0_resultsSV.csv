@@ -1,0 +1,10 @@
+	num_leaves	dir_conc	cell_pop	coverage	num_single_cells	read_len	frag_len	paired	exome	poisson_time	error_rate	tumor_num	sample_num	aggregate_tumor	del metric	inv metric
+0	 5	 10	 800000000.0	 2	 0	 125	 200	 True	 False	 14224991023.260794	 0.0	0	0	0.0	0.0	
+1	 5	 10	 800000000.0	 30	 0	 125	 200	 True	 False	 14224991023.260794	 0.0	0	1	0.0	0.0	
+2	 5	 10	 800000000.0	 5	 0	 125	 200	 True	 False	 14224991023.260794	 0.0	0	2	0.0	0.0	
+3	 5	 10	 800000000.0	 5	 0	 125	 200	 True	 False	 14224991023.260794	 0.0	0	3	0.0	0.0	
+4	 5	 10	 800000000.0	 10	 0	 125	 200	 True	 False	 14224991023.260794	 0.0	0	4	0.0	0.0	
+5	 5	 10	 800000000.0	 15	 0	 125	 200	 True	 False	 14224991023.260794	 0.0	0	5	0.0	0.0	
+6	 5	 10	 800000000.0	 2	 0	 125	 200	 True	 False	 14224991023.260794	 0.0	0	6	0.0	0.0	
+7	 5	 10	 800000000.0	 2	 0	 125	 200	 True	 False	 14224991023.260794	 0.0	0	7	0.0	0.0	
+8	-1	-1	-1	-1	-1	-1	-1	-1	-1	-1	-1	-1	-1	0.0	0.0	0.0
